@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.eager as tfe
 
-tf.enable_eager_execution()
+tf.enable_eager_execution(device_policy=tfe.DEVICE_PLACEMENT_SILENT)
 
 print("TensorFlow version: {}".format(tf.VERSION))
 print("Eager execution: {}".format(tf.executing_eagerly()))
