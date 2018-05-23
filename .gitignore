@@ -1,0 +1,11 @@
+**/*.pyc
+**/*.hdf5
+**/.ipynb_checkpoints
+.idea/
+**/*~
+gradle*
+libs/
+local.properties
+android.iml
+.gradle/
+android/assets/*
