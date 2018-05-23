@@ -46,8 +46,7 @@ def process_file(fname):
         'fname' contains coma separated fields where the last one is the 
         sentence to be processes
     """
-    data = open(fname).read()
-
+    
     text = []
     red_events = []
     with open(fname, 'r') as infile:
@@ -72,14 +71,14 @@ def getModel():
     ])
     return model
 
-def loss(model, x, y):
-    y_ = model(x)
-    return tf.keras.losses.categorical_crossentropy(y, y_)
+def loss(model, x, y, isTraining = None):
+    y_ = model(x, training = isTraining)
+    return tf.reduce_mean(tf.keras.losses.categorical_crossentropy(y, y_))
 
-def grad(model, inputs, targets):
+def grad(model, inputs, targets, isTraining):
     with tfe.GradientTape() as tape:
-        loss_value = loss(model, inputs, targets)
-    return tape.gradient(loss_value, model.variables)
+        loss_value = loss(model, inputs, targets, isTraining)
+    return tape.gradient(loss_value, model.variables), loss_value
 
 
 # optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
@@ -97,12 +96,12 @@ def train(model, training_dataset, num_epochs):
         startTime = time.time()
         # training using batches of 'batch_size'
         for X, y in tfe.Iterator(training_dataset):
-            grads = grad(model, X, y)
+            
+            grads, batch_loss = grad(model, X, y, isTraining=True)
             optimizer.apply_gradients(zip(grads, model.variables), 
                                      global_step=tf.train.get_or_create_global_step())
-            batch_loss = loss(model, X, y)
             epoch_loss_avg(batch_loss) # batch loss
-            train_losses.append(tf.reduce_mean(batch_loss))
+            train_losses.append(batch_loss)
 
         loss_results.append(epoch_loss_avg.result())
 
@@ -110,7 +109,6 @@ def train(model, training_dataset, num_epochs):
             print("Epoch {:03d}: Loss: {:.3f} - in: {:.3f} sec.".format(epoch, 
                                                                         epoch_loss_avg.result(), 
                                                                         (time.time()-startTime)))        
-#         del epoch_loss_avg
         
     avg_loss = tf.reduce_mean(train_losses)
     max_loss = tf.reduce_max(train_losses)
@@ -123,13 +121,13 @@ def process_user(user_name, outfile):
     num_epochs = 2
     batch_size = 512
     data_dir = '{0}/{1}/'.format(users_indir, u)
-    
+
     # keep results for plotting
     train_loss_results = []
 
     model = getModel()
 
-    for d in range(4):
+    for d in range(16):
 
         # training phase
         dataset_fname = data_dir+'{0}.txt'.format(d)
@@ -144,13 +142,10 @@ def process_user(user_name, outfile):
         loss_results = train(model, training_dataset, num_epochs)
         train_loss_results.append(loss_results)
         print('loss_results:', loss_results)
-        
-        # some cleanup
-        input_data = None
-        target_data = None
-        training_dataset = None
-        
-        # evaluation phase
+
+        """     
+        Evaluation phase
+        """
         dataset_fname = data_dir+'{0}.txt'.format(d+1)
         input_data, target_data, red_events = process_file(dataset_fname)
         print('  evaluating:', dataset_fname, " - num events:", len(input_data), " - red events:", len(red_events))
@@ -162,16 +157,11 @@ def process_user(user_name, outfile):
         
         # eval using batches of 'batch_size'
         for X, y in tfe.Iterator(eval_dataset):
-            line_losses = np.append(line_losses, tf.reduce_mean(loss(model, X, y), axis=1))
+            batch_loss = loss(model, X, y)
+            line_losses = np.append(line_losses, batch_loss)
 
         possible_anomalies = [(i,v) for i, v in enumerate(line_losses)]
         possible_anomalies.sort(key=lambda x: x[1], reverse=True)
-
-        # some cleanup
-        input_data = None
-        target_data = None
-        eval_dataset = None
-        line_losses = None
 
         print('    max:', possible_anomalies[:10])
         print('    red events:', [a for a,b in red_events])
@@ -185,6 +175,7 @@ def process_user(user_name, outfile):
                     break
             line = '{0},{1},{2}\n'.format(d, v, red)
             outfile.write(line)
+        
       
     # Save model to a file
     model_filepath = '{0}/{1}_simple_lm.hdfs'.format(users_modeldir, user_name)
@@ -200,6 +191,7 @@ def process_user(user_name, outfile):
     
 
 if __name__ == "__main__":
+
     if not os.path.exists(users_lossdir):
         os.makedirs(users_lossdir)
 
