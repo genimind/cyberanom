@@ -52,12 +52,14 @@ class ProcessUser(multiprocessing.Process):
         char_lm.do_evaluate(next_day)
 
 
-# user_names = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
-user_names = ['U207', 'U293']
+user_names_all = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
+user_names_short = ['U207', 'U293']
+user_names = user_names_all
 users_indir = '../data/users_feats'
 users_lossdir = '../data/users_losses'
 users_modeldir = '../data/users_models'
 users_logidr = '../data/users_logs'
+num_days = 57
 
 # logging.basicConfig(level=logging.INFO)
 
@@ -77,7 +79,7 @@ if __name__ == "__main__":
     if not os.path.exists(users_logidr):
         os.makedirs(users_logidr)
 
-    for d in range(27): # three days
+    for d in range(num_days):
         process_list = []
         for u in user_names:
             logger.info('Processing files for User: %s', u)
