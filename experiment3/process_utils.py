@@ -6,6 +6,7 @@ class UserConfig :
         self.feat_dir = 'unknown'
         self.output_filepath = 'unknown'
         self.model_filepath = 'unknwon'
+        self.log_filepath = 'unknown'
 
 
 # transform character-based input into equivalent numerical versions

@@ -40,29 +40,36 @@ class KerasLM(object):
                 
         self.userConfig = userConfig
         self.batch_size = 256
+        self.logger = logging.getLogger(__name__)
+        handler = logging.FileHandler(self.userConfig.log_filepath)
+        handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+
+        self.csv_logger = tf.keras.callbacks.CSVLogger(self.userConfig.log_filepath, append=True)
 
         # optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
         self.optimizer = tf.keras.optimizers.RMSprop(lr=0.001, epsilon=1e-08)
 
-        print('model_filepath:', self.userConfig.model_filepath)
+        self.logger.info('model_filepath: %s', self.userConfig.model_filepath)
         if os.path.exists(self.userConfig.model_filepath):
-            print('loading model:')
+            self.logger.info('loading model:')
             self.model = tf.keras.models.load_model(self.userConfig.model_filepath,
                                         custom_objects=None,
                                         compile=True)
         else:
-            print('creating new model')
+            self.logger.info('creating new model')
             self.model = getBidiModel()
 
-            print('compiling model')
+            self.logger.info('compiling model')
             self.model.compile(
                 loss='categorical_crossentropy',
                 optimizer=self.optimizer)
                 # metrics=['mean_squared_error'])
 
-        # print('Model summary:')
+        # self.logger.info('Model summary:')
         # self.model.summary()
-        # print('model metrics names:', self.model.metrics_names)
+        # self.logger.info('model metrics names:', self.model.metrics_names)
 
     def _eval_loss_v2(self, X, y):
         """
@@ -72,8 +79,8 @@ class KerasLM(object):
         line_losses = np.array([])
         
         y_ = self.model.predict(X, batch_size=self.batch_size, verbose=1)
-        # print('y shape:', y.shape)
-        # print('y_ shape:', y_.shape)
+        self.logger.debug('y shape: %s', y.shape)
+        self.logger.debug('y_ shape: %s', y_.shape)
 
         loss_res = tf.keras.losses.categorical_crossentropy(tf.convert_to_tensor(y), tf.convert_to_tensor(y_))
         
@@ -89,8 +96,8 @@ class KerasLM(object):
             This version of the evaluation loss function uses the same type of loss function from sklearn
         """
         y_ = self.model.predict(X, batch_size=self.batch_size, verbose=1)
-        # print('y shape:', y.shape)
-        # print('y_ shape:', y_.shape)
+        self.logger.debug('y shape: %s', y.shape)
+        self.logger.debug('y_ shape: %s', y_.shape)
 
         line_losses = []
         for l in range(y.shape[0]):
@@ -104,9 +111,10 @@ class KerasLM(object):
         train_losses = []
         loss_results = []
 
-        # print('X shape:', X.shape, ' - y shape:', y.shape)
+        # self.logger.info('X shape:', X.shape, ' - y shape:', y.shape)
 
-        history = self.model.fit(X, y, batch_size=self.batch_size, epochs=num_epochs)
+        history = self.model.fit(X, y, batch_size=self.batch_size, epochs=num_epochs, verbose=0,
+                                    callbacks=[self.csv_logger])
         avg_loss = np.mean(history.history['loss'])
         return avg_loss
 
@@ -118,14 +126,13 @@ class KerasLM(object):
 
         # training phase
         dataset_fname = self.userConfig.feat_dir+'{}.txt'.format(day)
-#         print('df:', dataset_fname)
         input_data, target_data, red_events = process_file(dataset_fname, num_chars, max_len)
-        print('processing:', dataset_fname, " - num events:", len(input_data), " - red events:", len(red_events))
+        self.logger.debug('processing: %s - num events: %d  - red events:%d', dataset_fname, len(input_data), len(red_events))
 
         # train model on a day
         loss_results = self._train(input_data, target_data, num_epochs)
         train_loss_results.append(loss_results)
-        print('loss_results:', loss_results)
+        self.logger.debug('loss_results: %s', loss_results)
 
         # Save model to a file
 
@@ -138,19 +145,19 @@ class KerasLM(object):
         """
         dataset_fname = self.userConfig.feat_dir+'{}.txt'.format(day)
         input_data, target_data, red_events = process_file(dataset_fname, num_chars, max_len)
-        print('  evaluating:', dataset_fname, " - num events:", len(input_data), " - red events:", len(red_events))
+        self.logger.debug('  evaluating: %s - num events: %d  - red events:%d', dataset_fname, len(input_data), len(red_events))
 
         line_losses = self._eval_loss(input_data, target_data)
 
         possible_anomalies = [(i,v) for i, v in enumerate(line_losses)]
         possible_anomalies.sort(key=lambda x: x[1], reverse=True)
 
-        # print('    max:', possible_anomalies[:10])
-        # print('    red events:', [a for a,b in red_events])
+        self.logger.debug('    max: %s', possible_anomalies[:10])
+        self.logger.debug('    red events: %s', [a for a,b in red_events])
         for index, (i, v) in enumerate(possible_anomalies):
             for a, b in red_events:
                 if a == i:
-                    print('      red_event index:', a, ' - anomaly index:', index)
+                    self.logger.info('      red_event index: %d  - anomaly index: %d', a, index)
         
         # write top 20 losses to a file with the format (day, score, redevent)
         with open(self.userConfig.output_filepath, 'a+') as outfile:
