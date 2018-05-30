@@ -127,12 +127,12 @@ class KerasLM(object):
         # training phase
         dataset_fname = self.userConfig.feat_dir+'{}.txt'.format(day)
         input_data, target_data, red_events = process_file(dataset_fname, num_chars, max_len)
-        self.logger.debug('processing: %s - num events: %d  - red events:%d', dataset_fname, len(input_data), len(red_events))
+        self.logger.info('processing: %s - num events: %d  - red events:%d', dataset_fname, len(input_data), len(red_events))
 
         # train model on a day
         loss_results = self._train(input_data, target_data, num_epochs)
         train_loss_results.append(loss_results)
-        self.logger.debug('loss_results: %s', loss_results)
+        self.logger.info('loss_results: %s', loss_results)
 
         # Save model to a file
 
@@ -145,7 +145,7 @@ class KerasLM(object):
         """
         dataset_fname = self.userConfig.feat_dir+'{}.txt'.format(day)
         input_data, target_data, red_events = process_file(dataset_fname, num_chars, max_len)
-        self.logger.debug('  evaluating: %s - num events: %d  - red events:%d', dataset_fname, len(input_data), len(red_events))
+        self.logger.info('  evaluating: %s - num events: %d  - red events:%d', dataset_fname, len(input_data), len(red_events))
 
         line_losses = self._eval_loss(input_data, target_data)
 
