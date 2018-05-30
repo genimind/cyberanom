@@ -1,5 +1,13 @@
 import numpy as np
 
+class UserConfig :
+    def __init__(self):
+        self.user_name = 'unknown'
+        self.feat_dir = 'unknown'
+        self.output_filepath = 'unknown'
+        self.model_filepath = 'unknwon'
+
+
 # transform character-based input into equivalent numerical versions
 def encode_data(text, num_chars, max_length):
     # create empty vessels for one-hot encoded input
