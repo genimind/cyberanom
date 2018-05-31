@@ -7,7 +7,8 @@ import tensorflow as tf
 import char_keras_lm as lm
 from process_utils import UserConfig
 
-logging.basicConfig(level=logging.INFO)
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=logFormat)
 
 # We use multiprocessing instead of thread to handle the Keras global state with multiple models
 class ProcessUser(multiprocessing.Process):
@@ -30,7 +31,7 @@ class ProcessUser(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
         self.userConfig = userConfig
         self.day = day
-        self.logger = logging.getLogger('ProcessUser: {}'.format(self.userConfig.user_name))
+        self.logger = logging.getLogger('ProcessUser')
         self.logger.setLevel(logging.INFO)
         
     def run(self):
@@ -53,8 +54,8 @@ class ProcessUser(multiprocessing.Process):
 
 
 user_names_all = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
-user_names_short = ['U207', 'U293']
-user_names = user_names_all
+user_names_short = ['U12', 'U13', 'U24', 'U78', 'U207']
+user_names = user_names_short
 users_indir = '../data/users_feats'
 users_lossdir = '../data/users_losses'
 users_modeldir = '../data/users_models'
@@ -97,9 +98,9 @@ if __name__ == "__main__":
         for p in process_list:
             p.start()
 
+        time.sleep(10)
         logger.info("... waiting for processing to finish for day: %d", d)
         for p in process_list:
             p.join()
         
-        tf.keras.backend.clear_session()
 

@@ -113,8 +113,9 @@ class KerasLM(object):
 
         # self.logger.info('X shape:', X.shape, ' - y shape:', y.shape)
 
-        history = self.model.fit(X, y, batch_size=self.batch_size, epochs=num_epochs, verbose=0,
-                                    callbacks=[self.csv_logger])
+        history = self.model.fit(X, y, batch_size=self.batch_size, epochs=num_epochs, verbose=2,
+                                     callbacks=[self.csv_logger])
+#        history = self.model.fit(X, y, batch_size=self.batch_size, epochs=num_epochs, verbose=2)
         avg_loss = np.mean(history.history['loss'])
         return avg_loss
 
@@ -161,7 +162,7 @@ class KerasLM(object):
         
         # write top 20 losses to a file with the format (day, score, redevent)
         with open(self.userConfig.output_filepath, 'a+') as outfile:
-            for i, v in possible_anomalies[:20]:
+            for i, v in possible_anomalies[:100]:
                 red = '0'
                 for a,b in red_events:
                     if a == i:
