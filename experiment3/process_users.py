@@ -19,7 +19,7 @@ class ProcessUser(multiprocessing.Process):
         Store the model for subsequent access.
     """
 
-    def __init__(self, userConfig : UserConfig, day):
+    def __init__(self, userConfig : UserConfig, day, num_days):
         """
             constructor
 
@@ -31,6 +31,7 @@ class ProcessUser(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
         self.userConfig = userConfig
         self.day = day
+        self.num_days = num_days
         self.logger = logging.getLogger('ProcessUser')
         self.logger.setLevel(logging.INFO)
         
@@ -46,21 +47,23 @@ class ProcessUser(multiprocessing.Process):
 
         # train model
         self.logger.info("%s Training step...", self.userConfig.user_name)
-        char_lm.do_training(self.day)
-
-        self.logger.info("%s Evaluation step...", self.userConfig.user_name)
-        next_day = int(self.day)+1        
-        char_lm.do_evaluate(next_day)
+        if char_lm.do_training(self.day):
+            done_evaluation  = False  
+            self.logger.info("%s Evaluation step...", self.userConfig.user_name)
+            next_day = int(self.day)+1
+            while not done_evaluation and next_day < self.num_days:
+                done_evaluation = char_lm.do_evaluate(next_day)
+                next_day +=1    
 
 
 user_names_all = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
-user_names_short = ['U12', 'U13', 'U24', 'U78', 'U207']
+user_names_short = ['U8170', 'U3277', 'U1789', 'U1581']
 user_names = user_names_short
 users_indir = '../data/users_feats'
 users_lossdir = '../data/users_losses'
 users_modeldir = '../data/users_models'
 users_logidr = '../data/users_logs'
-num_days = 57
+num_days = 26
 
 # logging.basicConfig(level=logging.INFO)
 
@@ -87,18 +90,18 @@ if __name__ == "__main__":
             userConfig = UserConfig()
             userConfig.user_name = u
             userConfig.feat_dir = '{0}/{1}/'.format(users_indir, u)
-            userConfig.output_filepath = '{0}/{1}_losses.txt'.format(users_lossdir, u)
+            userConfig.output_base_filepath = '{0}/{1}_losses'.format(users_lossdir, u)
             userConfig.model_filepath = '{0}/{1}_simple_lm.hdf5'.format(users_modeldir, u)
             userConfig.log_filepath = '{}/{}_log.txt'.format(users_logidr, u)
 
-            process_user = ProcessUser(userConfig, d)
+            process_user = ProcessUser(userConfig, d, num_days)
             process_list.append(process_user)
 
         logger.info(".... processing day: %d", d)
         for p in process_list:
             p.start()
 
-        time.sleep(10)
+        time.sleep(2)
         logger.info("... waiting for processing to finish for day: %d", d)
         for p in process_list:
             p.join()

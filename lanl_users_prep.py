@@ -7,7 +7,11 @@ max_len = 120
 
 # user_names = ['U12', 'U13', 'U24', 'U66', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
 # for simple testing, we'll initially ignore U66, it has 11M events
-user_names = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
+user_names_small = ['U8170', 'U3277', 'U8840', 'U7311', 'U1467', 'U1789', 'U8168', 'U1581', 'U7004', 'U9763']
+user_names_moderate = ['U5254', 'U9407', 'U1592', 'U1723', 'U1106', 'U3406', 'U342', 'U1653', 
+                'U20', 'U250', 'U1450', 'U1164', 'U86']
+user_names_most_active = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
+user_names = user_names_small
 users_indir = 'data/users'
 users_outdir = 'data/users_feats'
 redteam_fname = 'data/redteam.txt'

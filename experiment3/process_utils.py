@@ -4,7 +4,7 @@ class UserConfig :
     def __init__(self):
         self.user_name = 'unknown'
         self.feat_dir = 'unknown'
-        self.output_filepath = 'unknown'
+        self.output_base_filepath = 'unknown'
         self.model_filepath = 'unknwon'
         self.log_filepath = 'unknown'
 
