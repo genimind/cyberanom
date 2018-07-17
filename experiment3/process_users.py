@@ -56,14 +56,30 @@ class ProcessUser(multiprocessing.Process):
                 next_day +=1    
 
 
-user_names_all = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
-user_names_short = ['U8170', 'U3277', 'U1789', 'U1581']
+user_names_small = ['U8170', 'U3277', 'U8840', 'U7311', 'U1467', 'U1789', 'U8168', 'U1581', 'U7004', 'U9763']
+user_names_moderate = ['U5254', 'U9407', 'U1592', 'U1723', 'U1106', 'U3406', 'U342', 'U1653', 
+                'U20', 'U250', 'U1450', 'U1164', 'U86']
+user_names_most_active = ['U12', 'U13', 'U24', 'U78', 'U207', 'U293', 'U453', 'U679', 'U1289', 'U1480']
+
+#['U12', 'U293', 'U342'] 
+#['U13','U24','U1480']
+#['U78', 'U207', 'U453'] 
+#['U679','U1289','U5254']
+#['U9407','U1592','U1723']
+#['U1106','U3406','U1653']
+#['U20','U250','U1450']
+#['U1164', 'U86','U8170']
+#['U3277','U8840','U7311']
+#['U1467','U1789','U8168']
+#['U1581','U7004','U9763']
+user_names_short = ['U86']
 user_names = user_names_short
+
 users_indir = '../data/users_feats'
 users_lossdir = '../data/users_losses'
 users_modeldir = '../data/users_models'
 users_logidr = '../data/users_logs'
-num_days = 26
+num_days = 27 #14
 
 # logging.basicConfig(level=logging.INFO)
 

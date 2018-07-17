@@ -28,24 +28,48 @@ def encode_data(text, num_chars, max_length):
     return X, y
 
 
-def process_file(fname, num_chars, max_len):
+def decode_data(data):
+    results=[]
+    # print('data.shape:', data.shape)
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            for k in range(data.shape[2]):
+                if data[i, j, k] == 1:
+                    results.append(chr(k))
+                    break
+    
+    return ''.join(results)
+
+
+def process_file(fname, num_chars, max_len, filter_red=False):
     """
         process file by extracting sentences data and encode them producing 
         a set of input and target data for processing by the model
         'fname' contains coma separated fields where the last one is the 
         sentence to be processes
+
+        fname: file name
+        num_chars: num of ASCII used for encoding
+        max_len: max encoding array
+        filter_red: if True don't add red events to the encoded text (used when training)
     """
     
     text = []
     red_events = []
     with open(fname, 'r') as infile:
         for i, line in enumerate(infile.readlines()):
+            red_event = False
             line = line.strip().split(',')
-            text.append(line[-1])
             if int(line[2]) == 1:
                 red_events.append((i,line))
+                red_event = True
+            if filter_red  and red_event:
+                continue
+            else:
+                data = line[-1].split('|')
+                text.append(','.join(data[0:]))
         infile.close()
-#     print(text[0], 'len:', len(text[0]), len(text))
+    print(text[0], 'len:', len(text[0]), len(text))
 
     input_data, target_data = encode_data(text, num_chars, max_len)
     
